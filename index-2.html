@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voices of India — Literary & Indigenous Knowledge Atlas</title>
+<meta name="description" content="An interactive digital humanities atlas mapping writers and published works across India.">
+<style>
+:root{
+  --ink:#17251f; --muted:#607069; --paper:#fbf7ed; --card:#fffdf7;
+  --green:#176b52; --green2:#2e9a70; --gold:#e8ad42; --orange:#ef7658;
+  --line:#d9dfd4; --shadow:0 18px 50px rgba(23,37,31,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Georgia,"Times New Roman",serif;background:var(--paper);color:var(--ink);overflow-x:hidden}
+button,input{font:inherit}
+a{color:inherit;text-decoration:none}
+
+/* Decorative background */
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;z-index:-1;
+  background-image:radial-gradient(#176b52 1px,transparent 1px);
+  background-size:28px 28px;
+}
+.topbar{height:5px;background:linear-gradient(90deg,#176b52,#e8ad42,#ef7658,#176b52)}
+header{
+  position:sticky;top:0;z-index:50;background:rgba(251,247,237,.91);
+  backdrop-filter:blur(16px);border-bottom:1px solid rgba(23,37,31,.08)
+}
+.nav{max-width:1250px;margin:auto;display:flex;align-items:center;gap:22px;padding:15px 22px}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.logo{width:43px;height:43px;border-radius:50%;display:grid;place-items:center;color:white;
+  background:radial-gradient(circle at 35% 30%,#e8ad42,#176b52 60%,#0e4738);
+  box-shadow:0 8px 20px rgba(23,107,82,.22);font-size:21px}
+.brand strong{font-size:18px;letter-spacing:.4px}
+.brand small{display:block;color:var(--muted);font-family:Arial,sans-serif;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;margin-top:2px}
+.search{width:min(340px,32vw);position:relative}
+.search input{width:100%;padding:12px 42px 12px 16px;border:1px solid var(--line);border-radius:30px;background:#fffdf8;outline:none;color:var(--ink);font-family:Arial,sans-serif}
+.search input:focus{border-color:var(--green2);box-shadow:0 0 0 4px rgba(46,154,112,.10)}
+.search span{position:absolute;right:15px;top:9px;font-size:20px}
+.nav a{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#385047;padding:10px 12px;border-radius:10px}
+.nav a:hover{background:#e9f1e8;color:var(--green)}
+
+.hero{max-width:1250px;margin:auto;padding:75px 22px 25px;display:grid;grid-template-columns:1fr .72fr;gap:45px;align-items:center}
+.kicker{font:700 12px Arial,sans-serif;letter-spacing:2.2px;text-transform:uppercase;color:var(--green);margin-bottom:17px}
+h1{font-size:clamp(44px,6vw,78px);line-height:.94;letter-spacing:-3px;margin-bottom:23px}
+h1 em{color:var(--orange);font-weight:400}
+.hero p{font:17px/1.7 Arial,sans-serif;color:#58675f;max-width:700px}
+.hero-art{height:340px;border-radius:38px;position:relative;overflow:hidden;background:linear-gradient(145deg,#dcebd8,#f5d99c 48%,#f7c7ad);box-shadow:var(--shadow)}
+.sun{position:absolute;width:190px;height:190px;border-radius:50%;background:#f3bd52;right:42px;top:35px;opacity:.9}
+.ring{position:absolute;border:1px solid rgba(23,107,82,.28);border-radius:50%;width:330px;height:330px;right:-80px;top:-65px}
+.hero-art .leaf{position:absolute;font-size:90px;transform:rotate(-22deg);left:50px;bottom:35px}
+.hero-art .book{position:absolute;right:105px;bottom:38px;font-size:100px;transform:rotate(7deg);filter:drop-shadow(0 13px 12px rgba(0,0,0,.12))}
+.hero-art .label{position:absolute;left:25px;top:25px;padding:8px 12px;border-radius:20px;background:rgba(255,255,255,.65);font:700 11px Arial,sans-serif;letter-spacing:1px;color:var(--green)}
+
+.section{max-width:1250px;margin:auto;padding:55px 22px}
+.section-head{display:flex;justify-content:space-between;gap:25px;align-items:end;margin-bottom:22px}
+.section h2{font-size:37px;letter-spacing:-1px}
+.section-head p{font:13px/1.5 Arial,sans-serif;color:var(--muted);max-width:510px}
+
+/* Map */
+.map-shell{display:grid;grid-template-columns:1fr 280px;gap:20px;background:#f0eadc;border:1px solid #ded6c6;border-radius:30px;padding:22px;box-shadow:var(--shadow)}
+.map-panel{min-height:640px;background:linear-gradient(150deg,#e9f0e1,#f8f0d9);border-radius:22px;position:relative;overflow:hidden}
+.map-panel:before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,transparent 48%,rgba(23,107,82,.05) 49%,transparent 50%);background-size:45px 45px}
+.map-title{position:absolute;left:20px;top:18px;z-index:2;background:rgba(255,255,255,.75);padding:8px 12px;border-radius:10px;font:700 12px Arial,sans-serif;color:var(--green)}
+#indiaMap{width:100%;height:100%;min-height:640px}
+.state{stroke:#fff9ed;stroke-width:2;cursor:pointer;transition:.25s;filter:drop-shadow(0 2px 2px rgba(23,37,31,.06))}
+.state:hover{stroke:#17251f;stroke-width:3;transform:translateY(-2px);filter:drop-shadow(0 8px 8px rgba(23,37,31,.16))}
+.state.selected{stroke:#17251f;stroke-width:4}
+.map-note{position:absolute;bottom:15px;left:18px;font:11px Arial,sans-serif;color:#64736b;background:rgba(255,255,255,.65);padding:7px 10px;border-radius:9px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 10px 35px rgba(23,37,31,.07)}
+.panel h3{font-size:23px;margin-bottom:5px}
+.panel .region{font:12px Arial,sans-serif;color:var(--muted);margin-bottom:18px}
+.big-number{font-size:58px;line-height:1;color:var(--green);margin:8px 0}
+.panel .meta{font:13px/1.6 Arial,sans-serif;color:#617067}
+.legend{margin-top:25px;border-top:1px solid var(--line);padding-top:18px}
+.legend-title{font:700 11px Arial,sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.legend-bar{height:14px;border-radius:20px;background:linear-gradient(90deg,#e8f3e5,#a9d5a5,#5ca66f,#176b52,#093d31)}
+.legend-labels{display:flex;justify-content:space-between;font:10px Arial,sans-serif;color:var(--muted);margin-top:5px}
+.details-btn{margin-top:20px;width:100%;border:0;border-radius:12px;padding:13px;background:var(--green);color:white;font:700 13px Arial,sans-serif;cursor:pointer;transition:.2s}
+.details-btn:hover{background:#0e4d3b;transform:translateY(-2px)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.stat{padding:20px;border-radius:18px;background:#fffdf7;border:1px solid var(--line)}
+.stat strong{display:block;font-size:30px;color:var(--green)}
+.stat span{font:11px Arial,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+/* Data page / modal */
+.overlay{position:fixed;inset:0;background:rgba(12,27,21,.55);backdrop-filter:blur(7px);z-index:100;display:none;padding:25px;overflow:auto}
+.overlay.open{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{max-width:1050px;margin:30px auto;background:var(--paper);border-radius:28px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.25);animation:rise .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{transform:translateY(30px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-top{padding:28px 30px;background:linear-gradient(135deg,#176b52,#2e9a70);color:white;position:relative}
+.close{position:absolute;right:22px;top:18px;border:0;background:rgba(255,255,255,.18);color:white;width:38px;height:38px;border-radius:50%;font-size:22px;cursor:pointer}
+.modal-top small{font:700 11px Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;opacity:.8}
+.modal-top h2{font-size:42px;margin-top:7px}
+.modal-body{padding:30px}
+.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.author-card{background:#fffdf7;border:1px solid var(--line);border-radius:18px;padding:20px;transition:.25s}
+.author-card:hover{transform:translateY(-5px);box-shadow:0 12px 25px rgba(23,37,31,.08)}
+.author-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#e4efdf;color:var(--green);font-size:23px;margin-bottom:12px}
+.author-card h4{font-size:20px;margin-bottom:4px}
+.author-card .place{font:11px Arial,sans-serif;color:var(--orange);font-weight:bold;text-transform:uppercase;letter-spacing:.6px}
+.author-card ul{margin-top:13px;padding-left:17px;font:13px/1.7 Arial,sans-serif;color:#65716b}
+.no-results{text-align:center;padding:60px 20px;color:var(--muted);font:15px Arial,sans-serif}
+
+/* About */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.about-card{border-radius:25px;padding:34px;background:#e4efdf;min-height:260px}
+.about-card:nth-child(2){background:#f5dfb4}
+.about-card h3{font-size:28px;margin-bottom:12px}
+.about-card p{font:14px/1.8 Arial,sans-serif;color:#4e6057}
+.about-card a{display:inline-block;margin-top:18px;color:var(--green);font:700 13px Arial,sans-serif;border-bottom:1px solid}
+
+footer{margin-top:45px;background:#163c31;color:#eaf0e8;padding:45px 22px}
+.footer-inner{max-width:1250px;margin:auto;display:flex;justify-content:space-between;gap:30px}
+footer h3{font-size:25px;margin-bottom:9px}
+footer p,footer a{font:13px/1.7 Arial,sans-serif;color:#b9cbc1}
+footer .links{display:flex;gap:20px;flex-wrap:wrap;align-items:end}
+footer a:hover{color:white}
+
+@media(max-width:850px){
+ .nav{flex-wrap:wrap}.brand{margin-right:0}.search{order:3;width:100%}
+ .hero{grid-template-columns:1fr;padding-top:45px}.hero-art{height:260px}
+ .map-shell{grid-template-columns:1fr}.map-panel,#indiaMap{min-height:520px}
+ .stats{grid-template-columns:repeat(2,1fr)}.data-grid{grid-template-columns:1fr 1fr}
+ .about{grid-template-columns:1fr}.footer-inner{flex-direction:column}
+}
+@media(max-width:560px){
+ h1{letter-spacing:-2px}.section h2{font-size:30px}
+ .data-grid{grid-template-columns:1fr}.modal-top h2{font-size:32px}
+ .map-panel,#indiaMap{min-height:440px}
+}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="#">
+      <span class="logo">✦</span>
+      <span><strong>Voices of India</strong><small>Digital Humanities Atlas</small></span>
+    </a>
+    <div class="search">
+      <input id="searchBox" type="search" placeholder="Search writer, book, place..." aria-label="Search">
+      <span>⌕</span>
+    </div>
+    <a href="#map-section">Atlas</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+
+<main>
+<section class="hero">
+  <div>
+    <div class="kicker">A living literary map of India</div>
+    <h1>Many places.<br>Many <em>voices.</em></h1>
+    <p>
+      Explore writers and published works by region. The map uses colour intensity to
+      visualise the quantity of recorded publications. Select a region to move from
+      the map to its authors, places and books.
+    </p>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="label">LITERATURE • PLACE • MEMORY</div>
+    <div class="sun"></div><div class="ring"></div>
+    <div class="leaf">☘</div><div class="book">▤</div>
+  </div>
+</section>
+
+<section class="section" id="map-section">
+  <div class="section-head">
+    <div><div class="kicker">Explore the atlas</div><h2>Where are the voices?</h2></div>
+    <p>Hover over a region to see its publication count. Click a region for a detailed view.</p>
+  </div>
+
+  <div class="map-shell">
+    <div class="map-panel">
+      <div class="map-title">INDIA · PUBLICATION DENSITY</div>
+
+      <!-- Schematic interactive India map.
+           Replace these SVG paths with an official GeoJSON/SVG boundary dataset
+           if your project requires cartographic precision. -->
+      <svg id="indiaMap" viewBox="0 0 650 720" role="img" aria-label="Interactive map of India">
+        <!-- North-west / north -->
+        <path class="state" data-id="rajasthan" d="M125 150 L185 115 L245 125 L260 190 L225 240 L160 230 L120 205Z"/>
+        <path class="state" data-id="punjab" d="M245 105 L290 98 L305 135 L275 158 L248 145Z"/>
+        <path class="state" data-id="haryana" d="M275 155 L325 145 L335 185 L295 198 L265 182Z"/>
+        <path class="state" data-id="himachal" d="M295 98 L350 90 L370 125 L330 150 L305 135Z"/>
+        <path class="state" data-id="uttarakhand" d="M350 125 L400 130 L412 165 L370 175 L335 153Z"/>
+        <path class="state" data-id="uttarpradesh" d="M300 195 L420 165 L485 205 L460 270 L350 275 L280 235Z"/>
+        <path class="state" data-id="jammu" d="M225 55 L290 45 L325 80 L295 100 L245 105Z"/>
+
+        <!-- West / central -->
+        <path class="state" data-id="gujarat" d="M80 250 L145 225 L195 255 L185 325 L125 345 L65 305Z"/>
+        <path class="state" data-id="madhyapradesh" d="M185 255 L285 235 L350 275 L320 345 L220 350 L180 320Z"/>
+        <path class="state" data-id="maharashtra" d="M125 345 L220 350 L315 345 L350 405 L265 455 L165 425 L105 385Z"/>
+        <path class="state" data-id="goa" d="M165 425 L180 440 L170 462 L153 446Z"/>
+        <path class="state" data-id="chhattisgarh" d="M350 345 L410 320 L450 365 L420 420 L350 405 L315 380Z"/>
+
+        <!-- East -->
+        <path class="state" data-id="bihar" d="M420 270 L485 260 L525 295 L500 330 L435 325 L405 300Z"/>
+        <path class="state" data-id="jharkhand" d="M420 325 L500 330 L510 385 L455 410 L410 380Z"/>
+        <path class="state" data-id="westbengal" d="M500 295 L540 305 L555 380 L510 415 L500 385 L510 330Z"/>
+        <path class="state" data-id="odisha" d="M420 410 L510 385 L545 425 L500 475 L430 460Z"/>
+        <path class="state" data-id="sikkim" d="M535 275 L555 270 L560 292 L540 300Z"/>
+
+        <!-- South -->
+        <path class="state" data-id="telangana" d="M350 405 L420 420 L430 475 L375 500 L325 455Z"/>
+        <path class="state" data-id="andhrapradesh" d="M430 460 L500 475 L530 535 L470 555 L420 510Z"/>
+        <path class="state" data-id="karnataka" d="M265 455 L325 455 L375 500 L345 575 L285 555 L245 505Z"/>
+        <path class="state" data-id="tamilnadu" d="M345 575 L390 535 L470 555 L465 630 L410 675 L355 625Z"/>
+        <path class="state" data-id="kerala" d="M285 555 L345 575 L355 625 L325 665 L295 620Z"/>
+        <path class="state" data-id="assam" d="M555 245 L625 250 L630 275 L560 292 L540 275Z"/>
+
+        <!-- North-east -->
+        <path class="state" data-id="arunachal" d="M520 200 L590 175 L635 210 L625 250 L555 245Z"/>
+        <path class="state" data-id="nagaland" d="M605 295 L635 285 L640 325 L610 340Z"/>
+        <path class="state" data-id="manipur" d="M590 335 L620 330 L625 370 L595 382Z"/>
+        <path class="state" data-id="mizoram" d="M570 375 L600 382 L595 440 L565 425Z"/>
+        <path class="state" data-id="tripura" d="M535 360 L560 365 L555 405 L530 395Z"/>
+        <path class="state" data-id="meghalaya" d="M540 315 L590 310 L600 335 L550 345Z"/>
+
+        <!-- Islands -->
+        <path class="state" data-id="andaman" d="M585 520 L602 530 L600 570 L585 560Z"/>
+        <path class="state" data-id="lakshadweep" d="M115 500 L130 505 L125 525 L110 520Z"/>
+      </svg>
+      <div class="map-note">Illustrative state regions · publication values are demo data</div>
+    </div>
+
+    <aside class="panel">
+      <h3 id="selectedName">India</h3>
+      <div class="region" id="selectedRegion">Select a region on the map</div>
+      <div class="big-number" id="selectedWorks">—</div>
+      <div class="meta" id="selectedMeta">Recorded works</div>
+
+      <div class="legend">
+        <div class="legend-title">Publication quantity</div>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+      </div>
+
+      <button class="details-btn" id="detailsBtn" disabled>Choose a region →</button>
+    </aside>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong id="totalWorks">1,248</strong><span>Recorded works</span></div>
+    <div class="stat"><strong id="totalWriters">386</strong><span>Writers</span></div>
+    <div class="stat"><strong>28</strong><span>Regions represented</span></div>
+    <div class="stat"><strong>194</strong><span>Places documented</span></div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="section-head">
+    <div><div class="kicker">About the project</div><h2>Reading literature through place</h2></div>
+    <p>A research-oriented interface for a Digital Humanities project. Replace the demo dataset with your verified corpus.</p>
+  </div>
+  <div class="about">
+    <div class="about-card">
+      <h3>About the Atlas</h3>
+      <p>
+        This atlas is designed to connect writers, books and places. It can be used
+        to visualise where literary production is recorded and to open a deeper
+        catalogue for each region.
+      </p>
+      <a href="#map-section">Explore the map →</a>
+    </div>
+    <div class="about-card">
+      <h3>Support & Help</h3>
+      <p>
+        Add your project documentation, methodology, contributor guidelines,
+        source notes, contact details, GitHub repository, or institutional page here.
+      </p>
+      <a href="mailto:your-email@example.com">Contact the project →</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <h3>Voices of India</h3>
+      <p>Digital Humanities · Literary Mapping · Research Archive</p>
+    </div>
+    <div class="links">
+      <a href="#about">About</a>
+      <a href="#map-section">Atlas</a>
+      <a href="mailto:your-email@example.com">Help & Support</a>
+      <a href="#">Sources</a>
+      <a href="#">Methodology</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Region detail overlay -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-top">
+      <button class="close" id="closeModal" aria-label="Close">×</button>
+      <small id="modalKicker">Region</small>
+      <h2 id="modalTitle">Region</h2>
+      <p id="modalSummary" style="font:13px/1.6 Arial,sans-serif;margin-top:7px;opacity:.9"></p>
+    </div>
+    <div class="modal-body">
+      <div class="section-head" style="margin-bottom:18px">
+        <div><div class="kicker">Writers & works</div><h2 style="font-size:28px">The catalogue</h2></div>
+        <p id="modalCount"></p>
+      </div>
+      <div class="data-grid" id="authorGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   EDIT THIS DATASET
+   Add your verified authors, books, places and publication
+   counts here. The map automatically reads these values.
+   ========================================================= */
+const DATA = {
+  rajasthan:{
+    name:"Rajasthan", area:"North-West India", works:72,
+    summary:"A sample regional record. Replace this text with your corpus description.",
+    authors:[
+      {name:"Sample Writer A", place:"Jaipur", books:["Book Title One","Book Title Two"]},
+      {name:"Sample Writer B", place:"Udaipur", books:["Book Title Three"]}
+    ]
+  },
+  punjab:{name:"Punjab",area:"North India",works:48,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Amritsar",books:["Book Title"]}]},
+  haryana:{name:"Haryana",area:"North India",works:34,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Hisar",books:["Book Title"]}]},
+  himachal:{name:"Himachal Pradesh",area:"North India",works:29,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Shimla",books:["Book Title"]}]},
+  uttarakhand:{name:"Uttarakhand",area:"North India",works:41,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Dehradun",books:["Book Title"]}]},
+  uttarpradesh:{name:"Uttar Pradesh",area:"North India",works:112,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer A",place:"Lucknow",books:["Book Title One"]},{name:"Sample Writer B",place:"Varanasi",books:["Book Title Two"]}]},
+  jammu:{name:"Jammu & Kashmir",area:"North India",works:25,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Srinagar",books:["Book Title"]}]},
+  gujarat:{name:"Gujarat",area:"West India",works:68,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Ahmedabad",books:["Book Title"]}]},
+  madhyapradesh:{name:"Madhya Pradesh",area:"Central India",works:57,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Bhopal",books:["Book Title"]}]},
+  maharashtra:{name:"Maharashtra",area:"West India",works:138,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer A",place:"Mumbai",books:["Book Title One","Book Title Two"]},{name:"Sample Writer B",place:"Pune",books:["Book Title Three"]}]},
+  goa:{name:"Goa",area:"West India",works:22,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Panaji",books:["Book Title"]}]},
+  chhattisgarh:{name:"Chhattisgarh",area:"Central India",works:38,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Raipur",books:["Book Title"]}]},
+  bihar:{name:"Bihar",area:"East India",works:91,summary:"A sample record for a region with a strong literary and linguistic research archive.",authors:[{name:"Sample Writer A",place:"Patna",books:["Book Title One"]},{name:"Sample Writer B",place:"Bhojpur",books:["Book Title Two"]},{name:"Sample Writer C",place:"Buxar",books:["Book Title Three"]}]},
+  jharkhand:{name:"Jharkhand",area:"East India",works:76,summary:"Sample record. This section can later foreground Indigenous and regional writing.",authors:[{name:"Sample Writer A",place:"Ranchi",books:["Book Title One"]},{name:"Sample Writer B",place:"Dhanbad",books:["Book Title Two"]}]},
+  westbengal:{name:"West Bengal",area:"East India",works:124,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Kolkata",books:["Book Title"]}]},
+  sikkim:{name:"Sikkim",area:"North-East India",works:18,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Gangtok",books:["Book Title"]}]},
+  odisha:{name:"Odisha",area:"East India",works:83,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Bhubaneswar",books:["Book Title"]}]},
+  telangana:{name:"Telangana",area:"South India",works:61,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Hyderabad",books:["Book Title"]}]},
+  andhrapradesh:{name:"Andhra Pradesh",area:"South India",works:54,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Vijayawada",books:["Book Title"]}]},
+  karnataka:{name:"Karnataka",area:"South India",works:99,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Bengaluru",books:["Book Title"]}]},
+  tamilnadu:{name:"Tamil Nadu",area:"South India",works:116,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Chennai",books:["Book Title"]}]},
+  kerala:{name:"Kerala",area:"South India",works:87,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Kochi",books:["Book Title"]}]},
+  assam:{name:"Assam",area:"North-East India",works:64,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Guwahati",books:["Book Title"]}]},
+  arunachal:{name:"Arunachal Pradesh",area:"North-East India",works:16,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Itanagar",books:["Book Title"]}]},
+  nagaland:{name:"Nagaland",area:"North-East India",works:20,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Kohima",books:["Book Title"]}]},
+  manipur:{name:"Manipur",area:"North-East India",works:27,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Imphal",books:["Book Title"]}]},
+  mizoram:{name:"Mizoram",area:"North-East India",works:14,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Aizawl",books:["Book Title"]}]},
+  tripura:{name:"Tripura",area:"North-East India",works:23,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Agartala",books:["Book Title"]}]},
+  meghalaya:{name:"Meghalaya",area:"North-East India",works:31,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Shillong",books:["Book Title"]}]},
+  andaman:{name:"Andaman & Nicobar Islands",area:"Islands",works:9,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Port Blair",books:["Book Title"]}]},
+  lakshadweep:{name:"Lakshadweep",area:"Islands",works:7,summary:"Sample record for demonstration.",authors:[{name:"Sample Writer",place:"Kavaratti",books:["Book Title"]}]}
+};
+
+const states = [...document.querySelectorAll(".state")];
+const maxWorks = Math.max(...Object.values(DATA).map(x=>x.works));
+const minWorks = Math.min(...Object.values(DATA).map(x=>x.works));
+
+function colorFor(value){
+  const t = (value-minWorks)/(maxWorks-minWorks || 1);
+  // Light sage -> deep forest green
+  const c1=[232,243,229], c2=[9,61,49];
+  const rgb=c1.map((v,i)=>Math.round(v+(c2[i]-v)*t));
+  return `rgb(${rgb.join(",")})`;
+}
+states.forEach(s=>{
+  const d=DATA[s.dataset.id];
+  if(d) s.style.fill=colorFor(d.works);
+  s.addEventListener("mouseenter",()=>showPreview(d,s));
+  s.addEventListener("mouseleave",()=>{});
+  s.addEventListener("click",()=>openDetails(s.dataset.id));
+});
+
+function showPreview(d,shape){
+  if(!d)return;
+  document.getElementById("selectedName").textContent=d.name;
+  document.getElementById("selectedRegion").textContent=d.area;
+  document.getElementById("selectedWorks").textContent=d.works;
+  document.getElementById("selectedMeta").textContent=`recorded works · ${d.authors.length} sample author record${d.authors.length===1?"":"s"}`;
+  const btn=document.getElementById("detailsBtn");
+  btn.disabled=false;btn.textContent=`Explore ${d.name} →`;btn.onclick=()=>openDetails(shape.dataset.id);
+}
+function openDetails(id){
+  const d=DATA[id]; if(!d)return;
+  states.forEach(s=>s.classList.toggle("selected",s.dataset.id===id));
+  showPreview(d,{dataset:{id}});
+  document.getElementById("modalKicker").textContent=`${d.area} · ${d.works} recorded works`;
+  document.getElementById("modalTitle").textContent=d.name;
+  document.getElementById("modalSummary").textContent=d.summary;
+  document.getElementById("modalCount").textContent=`${d.authors.length} author records in this demonstration dataset`;
+  const grid=document.getElementById("authorGrid");
+  grid.innerHTML=d.authors.map(a=>`
+    <article class="author-card">
+      <div class="author-avatar">✦</div>
+      <h4>${escapeHtml(a.name)}</h4>
+      <div class="place">${escapeHtml(a.place)}</div>
+      <ul>${a.books.map(b=>`<li>${escapeHtml(b)}</li>`).join("")}</ul>
+    </article>`).join("");
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+function closeModal(){
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow="";
+}
+document.getElementById("closeModal").onclick=closeModal;
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+/* Search across region, author, place and book */
+document.getElementById("searchBox").addEventListener("input",e=>{
+  const q=e.target.value.trim().toLowerCase();
+  if(!q)return;
+  const match=Object.entries(DATA).find(([id,d])=>
+    d.name.toLowerCase().includes(q) ||
+    d.area.toLowerCase().includes(q) ||
+    d.authors.some(a=>a.name.toLowerCase().includes(q)||a.place.toLowerCase().includes(q)||a.books.some(b=>b.toLowerCase().includes(q)))
+  );
+  if(match){
+    const [id,d]=match;
+    const shape=document.querySelector(`[data-id="${id}"]`);
+    if(shape)showPreview(d,shape);
+  }
+});
+</script>
+</body>
+</html>
